@@ -108,8 +108,55 @@ class ShoppingListApp(App):
 
     def update_list(self):
         self.list_layout.clear_widgets()
-        for item in shopping_list:
-            self.list_layout.add_widget(Label(text=item, size_hint_y=None, height=40))
+        for idx, item in enumerate(shopping_list):
+            item_layout = BoxLayout(size_hint_y=None, height=40)
+
+            item_label = Label(text=item, size_hint_x=0.7)
+            item_layout.add_widget(item_label)
+
+            edit_button = Button(text="Edit", size_hint_x=0.15)
+            edit_button.bind(on_press=lambda x, idx=idx: self.edit_item(idx))
+            item_layout.add_widget(edit_button)
+
+            delete_button = Button(text="Delete", size_hint_x=0.15)
+            delete_button.bind(on_press=lambda x, idx=idx: self.delete_item_by_index(idx))
+            item_layout.add_widget(delete_button)
+
+            self.list_layout.add_widget(item_layout)
+
+    def delete_item_by_index(self, index):
+        if 0<= index < len(shopping_list):
+            item_to_delete = shopping_list.pop(index)
+            self.update_list()
+            popup = Popup(title='Item Deleted',
+                          content=Label(text=f"'{item_to_delete}' has been removed from the shopping list."),
+                          size_hint=(0.6, 0.4))
+            popup.open()
+
+    def edit_item(self, index):
+        item_to_edit = shopping_list[index]
+        edit_popup = Popup(title='Edit Item',
+                           size_hint=(0.6, 0.4))
+        
+        content = BoxLayout(orientation='vertical')
+
+        edit_input = TextInput(text=item_to_edit, multiline=False)
+        content.add_widget(edit_input)
+
+        save_button = Button(text="Save")
+        save_button.bind(on_press= lambda x: self.save_edited_item(index, edit_input.text, edit_popup))
+        content.add_widget(save_button)
+
+        edit_popup.content = content
+        edit_popup.open()
+
+    def save_edited_item(self, index, new_text, popup):
+        shopping_list[index] = new_text
+        self.update_list()
+        popup.dismiss()
+
+
+
 
 if __name__ == '__main__':
     ShoppingListApp().run()
