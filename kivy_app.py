@@ -5,6 +5,7 @@ from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.popup import Popup
+from kivy.uix.spinner import Spinner
 
 shopping_list = []
 
@@ -26,6 +27,14 @@ class ShoppingListApp(App):
 
         self.input_text = TextInput(hint_text="Enter new item")
         input_layout.add_widget(self.input_text)
+
+        self.category_spinner = Spinner(
+            text='Select Category',
+            values=('Grocery', 'Electronics', 'Clothing', 'Miscellaneous'),
+            size_hint=(None,None),
+            size=(200,44)
+        )
+        input_layout.add_widget(self.category_spinner)
 
         add_button = Button(text="Add Item", on_press=self.add_item)
         input_layout.add_widget(add_button)
@@ -53,17 +62,19 @@ class ShoppingListApp(App):
 
     def add_item(self, instance):
         item = self.input_text.text
-        if item:
-            shopping_list.append(item)
+        category = self.category_spinner.text
+        if item and category != 'Select Category':
+            shopping_list.append((item, category))
             self.update_list()
             self.input_text.text = ""
+            self.category_spinner.text = 'Select Category'
 
     def delete_item(self, instance):
         if shopping_list:
             item_to_delete = shopping_list.pop()
             self.update_list()
             popup = Popup(title='Item Deleted',
-                          content=Label(text=f"'{item_to_delete}' has been removed from the shopping list."),
+                          content=Label(text=f"'{item_to_delete[0]}' in category '{item_to_delete[1]}' has been removed from the shopping list."),
                           size_hint=(0.6, 0.4))
             popup.open()
         else:
@@ -75,11 +86,15 @@ class ShoppingListApp(App):
     def clear_list(self, instance):
         shopping_list.clear()
         self.update_list()
+        popup = Popup(title='List Cleared',
+                      content=Label(text='The shopping list has been cleared.'),
+                      size_hint=(0.6,0.4))
+        popup.open()
 
     def save_list(self, instance):
         with open("shopping_list.txt", 'w') as file:
-            for item in shopping_list:
-                file.write(f"{item}\n")
+            for item, category in shopping_list:
+                file.write(f"{item}|{category}\n")
         popup = Popup(title='Save List',
                       content=Label(text='Shopping list saved to shopping_list.txt'),
                       size_hint=(0.6, 0.4))
@@ -89,7 +104,7 @@ class ShoppingListApp(App):
         try:
             with open("shopping_list.txt", 'r') as file:
                 global shopping_list
-                shopping_list = [line.strip() for line in file]
+                shopping_list = [tuple(line.strip().split('|')) for line in file]
             self.update_list()
             popup = Popup(title='Load List',
                           content=Label(text='Shopping list loaded from shopping_list'),
@@ -108,10 +123,10 @@ class ShoppingListApp(App):
 
     def update_list(self):
         self.list_layout.clear_widgets()
-        for idx, item in enumerate(shopping_list):
+        for idx, (item, category) in enumerate(shopping_list):
             item_layout = BoxLayout(size_hint_y=None, height=40)
 
-            item_label = Label(text=item, size_hint_x=0.7)
+            item_label = Label(text=f"{item} ({category})", size_hint_x=0.7)
             item_layout.add_widget(item_label)
 
             edit_button = Button(text="Edit", size_hint_x=0.15)
@@ -129,12 +144,12 @@ class ShoppingListApp(App):
             item_to_delete = shopping_list.pop(index)
             self.update_list()
             popup = Popup(title='Item Deleted',
-                          content=Label(text=f"'{item_to_delete}' has been removed from the shopping list."),
+                          content=Label(text=f"'{item_to_delete[0]}' in category '{item_to_delete[1]}' has been removed from the shopping list."),
                           size_hint=(0.6, 0.4))
             popup.open()
 
     def edit_item(self, index):
-        item_to_edit = shopping_list[index]
+        item_to_edit, category_to_edit = shopping_list[index]
         edit_popup = Popup(title='Edit Item',
                            size_hint=(0.6, 0.4))
         
@@ -143,19 +158,25 @@ class ShoppingListApp(App):
         edit_input = TextInput(text=item_to_edit, multiline=False)
         content.add_widget(edit_input)
 
+        edit_category_spinner = Spinner(
+            text=category_to_edit,
+            values=('Grocery', 'Electronics', 'Clothing', 'Miscellaneous'),
+            size_hint=(None,None),
+            size=(200,44)
+        )
+        content.add_widget(edit_category_spinner)
+
         save_button = Button(text="Save")
-        save_button.bind(on_press= lambda x: self.save_edited_item(index, edit_input.text, edit_popup))
+        save_button.bind(on_press= lambda x: self.save_edited_item(index, edit_input.text, edit_category_spinner.text, edit_popup))
         content.add_widget(save_button)
 
         edit_popup.content = content
         edit_popup.open()
 
-    def save_edited_item(self, index, new_text, popup):
-        shopping_list[index] = new_text
+    def save_edited_item(self, index, new_text, new_category, popup):
+        shopping_list[index] = (new_text, new_category)
         self.update_list()
         popup.dismiss()
-
-
 
 
 if __name__ == '__main__':
