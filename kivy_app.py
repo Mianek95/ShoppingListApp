@@ -41,6 +41,14 @@ class ShoppingListApp(App):
 
         main_layout.add_widget(input_layout)
 
+        search_layout = BoxLayout(size_hint=(1,0.1))
+
+        self.search_input = TextInput(hint_text="Search items")
+        self.search_input.bind(text=self.update_list)
+        search_layout.add_widget(self.search_input)
+
+        main_layout.add_widget(search_layout)
+
         button_layout = BoxLayout(size_hint=(1,0.1))
 
         delete_button = Button(text="Delete Item", on_press=self.delete_item)
@@ -121,23 +129,25 @@ class ShoppingListApp(App):
                           size_hint=(0.6, 0.4))
             popup.open()
 
-    def update_list(self):
+    def update_list(self, *args):
+        search_text = self.search_input.text.lower()
         self.list_layout.clear_widgets()
         for idx, (item, category) in enumerate(shopping_list):
-            item_layout = BoxLayout(size_hint_y=None, height=40)
+            if search_text in item.lower() or search_text in category.lower():
+                item_layout = BoxLayout(size_hint_y=None, height=40)
 
-            item_label = Label(text=f"{item} ({category})", size_hint_x=0.7)
-            item_layout.add_widget(item_label)
+                item_label = Label(text=f"{item} ({category})", size_hint_x=0.7)
+                item_layout.add_widget(item_label)
 
-            edit_button = Button(text="Edit", size_hint_x=0.15)
-            edit_button.bind(on_press=lambda x, idx=idx: self.edit_item(idx))
-            item_layout.add_widget(edit_button)
+                edit_button = Button(text="Edit", size_hint_x=0.15)
+                edit_button.bind(on_press=lambda x, idx=idx: self.edit_item(idx))
+                item_layout.add_widget(edit_button)
 
-            delete_button = Button(text="Delete", size_hint_x=0.15)
-            delete_button.bind(on_press=lambda x, idx=idx: self.delete_item_by_index(idx))
-            item_layout.add_widget(delete_button)
+                delete_button = Button(text="Delete", size_hint_x=0.15)
+                delete_button.bind(on_press=lambda x, idx=idx: self.delete_item_by_index(idx))
+                item_layout.add_widget(delete_button)
 
-            self.list_layout.add_widget(item_layout)
+                self.list_layout.add_widget(item_layout)
 
     def delete_item_by_index(self, index):
         if 0<= index < len(shopping_list):

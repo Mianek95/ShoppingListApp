@@ -1,0 +1,7 @@
+shoes|Clothing
+apple|Grocery
+raditz|Grocery
+iPhone|Electronics
+motherboard|Electronics
+milk|Miscellaneous
+tshirt|Clothing
