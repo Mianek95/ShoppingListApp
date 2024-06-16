@@ -1,3 +1,4 @@
+import csv, json
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
@@ -63,6 +64,18 @@ class ShoppingListApp(App):
         load_button = Button(text="Load List", on_press=self.load_list)
         button_layout.add_widget(load_button)
 
+        export_csv_button = Button(text="Export to CSV", on_press=self.export_to_csv)
+        button_layout.add_widget(export_csv_button)
+
+        import_csv_button = Button(text="Import from CSV", on_press=self.import_from_csv)
+        button_layout.add_widget(import_csv_button)
+
+        export_json_button = Button(text="Export to JSON", on_press=self.export_to_json)
+        button_layout.add_widget(export_json_button)
+
+        import_json_button = Button(text="Import from JSON", on_press=self.import_from_json)
+        button_layout.add_widget(import_json_button)
+
         main_layout.add_widget(button_layout)
 
         return main_layout
@@ -121,6 +134,68 @@ class ShoppingListApp(App):
         except FileNotFoundError:
             popup = Popup(title='Load List',
                           content=Label(text='No saved shopping list found.'),
+                          size_hint=(0.6, 0.4))
+            popup.open()
+        except Exception as e:
+            popup = Popup(title='Error',
+                          content=Label(text=f'An error occurred: {e}'),
+                          size_hint=(0.6, 0.4))
+            popup.open()
+
+    def export_to_csv(self, instance):
+        with open("shopping_list.csv", 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Item", "Category"])
+            writer.writerows(shopping_list)
+        popup = Popup(title='Export to CSV',
+                      content=Label(text='Shopping list exported to shopping_list.csv'),
+                      size_hint=(0.6, 0.4))
+        popup.open()
+
+    def import_from_csv(self, instance):
+        try:
+            with open("shopping_list.csv", 'r') as file:
+                reader = csv.reader(file)
+                next(reader)
+                global shopping_list
+                shopping_list = [tuple(row) for row in reader]
+            self.update_list()
+            popup = Popup(title='Import from CSV',
+                          content=Label(text='Shopping list imported from shopping_list.csv'),
+                          size_hint=(0.6, 0.4))
+            popup.open()
+        except FileNotFoundError:
+            popup = Popup(title='Import from CSV',
+                          content=Label(text='No CSV file found.'),
+                          size_hint=(0.6, 0.4))
+            popup.open()
+        except Exception as e:
+            popup = Popup(title='Error',
+                          content=Label(text=f'An error occurred: {e}'),
+                          size_hint=(0.6, 0.4))
+            popup.open()
+
+    def export_to_json(self, instance):
+        with open("shopping_list.json", 'w') as file:
+            json.dump(shopping_list, file)
+        popup = Popup(title='Export to JSON',
+                      content=Label(text='Shopping list exported to shopping_list.json'),
+                      size_hint=(0.6, 0.4))
+        popup.open()
+
+    def import_from_json(self, instance):
+        try:
+            with open("shopping_list.json", 'r') as file:
+                global shopping_list
+                shopping_list = json.load(file)
+            self.update_list()
+            popup = Popup(title='Import from JSON',
+                          content=Label(text='Shopping list imported from shopping_list.json'),
+                          size_hint=(0.6, 0.4))
+            popup.open()
+        except FileNotFoundError:
+            popup = Popup(title='Import from JSON',
+                          content=Label(text='No JSON file found.'),
                           size_hint=(0.6, 0.4))
             popup.open()
         except Exception as e:
